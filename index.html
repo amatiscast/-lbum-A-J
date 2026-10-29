@@ -220,6 +220,8 @@ video.moving{animation:breathe 6s ease-in-out infinite}
 .confirm{position:absolute;inset:0;z-index:4;background:rgba(18,12,8,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
   color:var(--text);font-size:calc(var(--bw)*.045);text-align:center;padding:8%}
 .confirm .row{display:flex;gap:8px}
+.confirm .col{display:flex;flex-direction:column;gap:7px;width:100%;max-width:200px}
+.confirm .col .btn{width:100%}
 
 /* ---------- controls ---------- */
 .controls{position:relative;z-index:40;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
@@ -304,7 +306,7 @@ video.moving{animation:breathe 6s ease-in-out infinite}
 
 <div class="sheet" id="sheet" hidden>
   <form class="panel" id="form">
-    <h3>Nueva foto</h3>
+    <h3 id="sheetTitle">Nueva foto</h3>
     <div class="preview" id="preview"></div>
     <div class="field"><label for="cap">Lo que escribirías en el borde</label><input id="cap" maxlength="34" placeholder="Nuestra primera nevada" autocomplete="off"></div>
     <div class="field"><span class="flabel">Formato</span><div class="shape-pick" role="radiogroup" aria-label="Formato de la foto">
@@ -665,7 +667,8 @@ book.addEventListener('click',e=>{
   const act=e.target.closest('[data-act]');
   if(act){
     e.stopPropagation();
-    if(act.dataset.act==='add') $('#file').click();
+    if(act.dataset.act==='add'){ S.replaceId=null; $('#file').click(); }
+    else if(act.dataset.act==='replace'){ S.replaceId=act.closest('.instax').dataset.id; act.closest('.confirm').remove(); $('#file').click(); }
     else if(act.dataset.act==='del') askDelete(act.closest('.instax'));
     else if(act.dataset.act==='no') act.closest('.confirm').remove();
     else if(act.dataset.act==='yes') doDelete(act.closest('.instax'));
@@ -737,7 +740,10 @@ $('#lb').addEventListener('pointerup',e=>{ if(lbX===null) return; const dx=e.cli
 function askDelete(fig){
   if(!fig || fig.querySelector('.confirm')) return;
   const d=document.createElement('div'); d.className='confirm';
-  d.innerHTML=`<span>¿Quitar esta foto del álbum?</span><div class="row"><button type="button" class="btn sm danger" data-act="yes">Quitar</button><button type="button" class="btn sm" data-act="no">No</button></div>`;
+  d.innerHTML=`<span>¿Qué hacemos con esta foto?</span><div class="col">
+    <button type="button" class="btn sm solid" data-act="replace">Reemplazar por otra</button>
+    <button type="button" class="btn sm danger" data-act="yes">Quitar y recorrer</button>
+    <button type="button" class="btn sm" data-act="no">Cancelar</button></div>`;
   fig.appendChild(d);
 }
 async function doDelete(fig){
@@ -762,6 +768,11 @@ $('#file').addEventListener('change',e=>{
   const url=URL.createObjectURL(f);
   $('#preview').innerHTML = isVideo ? `<video src="${url}" muted loop autoplay playsinline></video>` : `<img src="${url}" alt="Vista previa">`;
   $('#cap').value=''; $('#when').value=''; $('#status').textContent='';
+  const old = S.replaceId && S.photos ? S.photos.find(p=>p.id===S.replaceId) : null;
+  if(S.replaceId && !old) S.replaceId=null;
+  $('#sheetTitle').textContent = old ? 'Reemplazar foto' : 'Nueva foto';
+  $('#save').textContent = old ? 'Reemplazar' : 'Guardar en el álbum';
+  if(old){ $('#cap').value=old.caption||''; $('#when').value=old.date||''; }
   $('#shapeV').checked=true;
   const setShape=v=>{ (v==='wide'?$('#shapeW'):$('#shapeV')).checked=true; $('#preview').classList.toggle('wide',v==='wide'); };
   setShape('tall');
@@ -772,7 +783,7 @@ $('#file').addEventListener('change',e=>{
   setTimeout(()=>$('#cap').focus(),50);
 });
 document.querySelectorAll('input[name="shape"]').forEach(r=>r.addEventListener('change',()=>$('#preview').classList.toggle('wide',$('#shapeW').checked)));
-function closeSheet(){ $('#sheet').hidden=true; $('#preview').innerHTML=''; S.file=null; }
+function closeSheet(){ $('#sheet').hidden=true; $('#preview').innerHTML=''; S.file=null; S.replaceId=null; }
 $('#cancel').onclick=closeSheet;
 $('#sheet').addEventListener('click',e=>{ if(e.target.id==='sheet') closeSheet(); });
 
@@ -796,6 +807,13 @@ $('#form').addEventListener('submit',async e=>{
     const blob = S.kind==='image' ? await shrink(S.file) : S.file;
     if(blob.size>20*1024*1024) throw {code:'too_large'};
     const up = await S.assets.upload(blob);
+    const rid=S.replaceId, old=rid && S.photos.find(p=>p.id===rid);
+    if(old){
+      await S.db.collection('photos').doc(rid).update({ asset: up.id, url: up.url, kind: S.kind, shape: $('#shapeW').checked?'wide':'tall',
+        caption: $('#cap').value.trim().slice(0,34), date: $('#when').value.trim().slice(0,16) });
+      if(old.asset && old.asset!==up.id) S.assets.delete(old.asset).catch(()=>{});
+      closeSheet(); toast('Foto reemplazada.'); return;
+    }
     await S.db.collection('photos').add({
       asset: up.id, url: up.url, kind: S.kind, shape: $('#shapeW').checked?'wide':'tall',
       caption: $('#cap').value.trim().slice(0,34),
@@ -837,8 +855,11 @@ async function addLocal(){
   $('#save').disabled=true; $('#status').textContent='Agregando…';
   try{
     const blob = S.kind==='image' ? await shrinkTo(S.file,1300) : S.file;
-    S.photos.push({ id:'f'+Date.now().toString(36), url: await toDataURL(blob), kind:S.kind,
-      shape: $('#shapeW').checked?'wide':'tall', caption:$('#cap').value.trim().slice(0,34), date:$('#when').value.trim().slice(0,16) });
+    const entry={ id:'f'+Date.now().toString(36), url: await toDataURL(blob), kind:S.kind,
+      shape: $('#shapeW').checked?'wide':'tall', caption:$('#cap').value.trim().slice(0,34), date:$('#when').value.trim().slice(0,16) };
+    const ri=S.replaceId ? S.photos.findIndex(p=>p.id===S.replaceId) : -1;
+    if(ri>=0){ S.photos[ri]=entry; markDirty(); closeSheet(); render(); toast('Foto reemplazada. Cuando termines, toca Descargar álbum.'); return; }
+    S.photos.push(entry);
     markDirty(); closeSheet();
     S.cur = Math.max(1, pages().length - (S.canAdd && S.photos.length%2===0 ? 1 : 0));
     render(); toast('Foto agregada. Cuando termines, toca Descargar álbum.');
@@ -985,20 +1006,28 @@ async function ghAdd(){
     GHM.blobs[id]=URL.createObjectURL(blob);
     const entry={id,url:file,kind:S.kind,shape:$('#shapeW').checked?'wide':'tall',caption:$('#cap').value.trim().slice(0,34),date:$('#when').value.trim().slice(0,16)};
     $('#status').textContent='Guardando en el álbum…';
+    const rid=S.replaceId, old=rid && S.photos.find(p=>p.id===rid);
+    if(old){
+      await ghSaveList(l=>{ const i=l.findIndex(p=>p.id===rid); if(i<0) l.push(entry); else l[i]=entry; return l; },'Reemplazar foto del álbum');
+      closeSheet(); render(); toast('Foto reemplazada. Los demás la verán en uno o dos minutos.');
+      ghRemoveFile(old); return;
+    }
     await ghSaveList(l=>[...l,entry],'Agregar foto al álbum');
     closeSheet();
     S.cur = Math.max(1, pages().length-1); render();
     toast('Guardada. Los demás la verán en uno o dos minutos.');
   }catch(e){ $('#save').disabled=false; $('#status').textContent=ghError(e); }
 }
+async function ghRemoveFile(ph){
+  if(!(ph && ph.url && /^fotos\//.test(ph.url))) return;
+  try{ const f=await ghApi('/contents/'+encPath(ghPath(ph.url))+'?ref='+encodeURIComponent(GHM.branch));
+    await ghApi('/contents/'+encPath(ghPath(ph.url)),{method:'DELETE',body:JSON.stringify({message:'Quitar foto del álbum',sha:f.sha,branch:GHM.branch})}); }catch{}
+}
 async function ghDelete(id,ph){
   try{
     await ghSaveList(l=>l.filter(p=>p.id!==id),'Quitar foto del álbum');
     toast('Foto quitada. Los demás lo verán en uno o dos minutos.');
-    if(ph && ph.url && /^fotos\//.test(ph.url)){
-      try{ const f=await ghApi('/contents/'+encPath(ghPath(ph.url))+'?ref='+encodeURIComponent(GHM.branch));
-        await ghApi('/contents/'+encPath(ghPath(ph.url)),{method:'DELETE',body:JSON.stringify({message:'Quitar foto del álbum',sha:f.sha,branch:GHM.branch})}); }catch{}
-    }
+    ghRemoveFile(ph);
   }catch(e){ toast(ghError(e)); render(); }
 }
 async function ghMove(id,dir){
