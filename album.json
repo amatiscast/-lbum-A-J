@@ -24,20 +24,20 @@
   "date": "???"
  },
  {
-  "id": "mvt29g801h3n",
-  "url": "fotos/mvt29g801h3n.jpg",
-  "kind": "image",
-  "shape": "tall",
-  "caption": "Quién es él?…",
-  "date": "????"
- },
- {
   "id": "halloween-el",
   "url": "fotos/halloween-el.jpg",
   "kind": "image",
   "shape": "wide",
   "caption": "",
   "date": ""
+ },
+ {
+  "id": "mvt29g801h3n",
+  "url": "fotos/mvt29g801h3n.jpg",
+  "kind": "image",
+  "shape": "tall",
+  "caption": "Quién es él?…",
+  "date": "????"
  },
  {
   "id": "m22c9bc5b",
