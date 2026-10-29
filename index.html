@@ -30,11 +30,11 @@
   --display:"IM Fell English", "Cormorant Garamond", Georgia, serif;
   --body:"Cormorant Garamond", Georgia, "Times New Roman", serif;
   --hand:"Caveat", "Segoe Print", "Bradley Hand", cursive;
-  --bw:min(86vw, calc((100vh - 150px) * .5625), 430px);
+  --bw:min(88vw, calc((100vh - 150px) * .5625), 680px);
   --turn:1.05s;
   color-scheme:dark;
 }
-@supports (height:100dvh){ :root{ --bw:min(86vw, calc((100dvh - 150px) * .5625), 430px); } }
+@supports (height:100dvh){ :root{ --bw:min(88vw, calc((100dvh - 150px) * .5625), 680px); } }
 html,body{height:100%}
 [hidden]{display:none!important}
 body{background:var(--night);color:var(--text);font-family:var(--body);overflow:hidden}
@@ -252,6 +252,29 @@ video.moving{animation:breathe 6s ease-in-out infinite}
 .panel .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .panel .status{font-style:italic;color:var(--muted);font-size:15px;min-height:1.2em;margin:0}
 
+.lightbox{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:radial-gradient(ellipse at 50% 45%, rgba(40,26,14,.88), rgba(8,5,3,.96));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  padding:calc(16px + env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px));
+  touch-action:pan-y;animation:lbIn .35s ease}
+@keyframes lbIn{from{opacity:0}to{opacity:1}}
+.lb-card{position:relative;margin:0;padding:12px 12px 0;background:linear-gradient(170deg,#f6f0e3,var(--cream) 60%,#e2d8c4);border-radius:3px;
+  box-shadow:0 30px 70px rgba(0,0,0,.7), 0 4px 10px rgba(0,0,0,.5);transform:rotate(-1deg);animation:lbCard .45s cubic-bezier(.2,.8,.3,1.1);max-width:100%;min-width:0}
+@keyframes lbCard{from{transform:rotate(-5deg) scale(.82) translateY(18px);opacity:0}to{transform:rotate(-1deg) scale(1);opacity:1}}
+.lb-card img,.lb-card video{display:block;max-width:min(84vw, 1100px);max-height:calc(100vh - 190px);width:auto;height:auto;background:#15100b}
+@supports (height:100dvh){ .lb-card img,.lb-card video{max-height:calc(100dvh - 190px)} }
+.lb-card figcaption{min-height:58px;display:flex;align-items:center;justify-content:center;padding:6px 14px;font-family:var(--hand);font-weight:600;
+  font-size:clamp(22px,3.4vw,32px);line-height:1.05;color:var(--ink);text-align:center;max-width:min(84vw,1100px)}
+.lb-card .when{position:absolute;right:14px;bottom:6px;font-family:var(--hand);font-size:clamp(15px,2vw,19px);color:#7a6a55}
+.lb-btn{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid rgba(207,174,114,.4);background:rgba(207,174,114,.1);color:var(--text);
+  font-size:26px;line-height:1;display:grid;place-items:center;cursor:pointer}
+.lb-btn:hover{background:rgba(207,174,114,.22)}
+.lb-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.lb-btn:disabled{opacity:.2;cursor:default}
+.lb-close{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:max(12px, env(safe-area-inset-right,0px))}
+.lb-count{position:absolute;left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom,0px));text-align:center;font-style:italic;color:var(--muted);font-size:15px}
+@media (max-width:600px){ .lightbox .lb-btn.nav{position:absolute;bottom:calc(30px + env(safe-area-inset-bottom,0px))} .lb-prev{left:22%} .lb-next{right:22%}
+  .lb-card img,.lb-card video{max-width:calc(100vw - 32px);max-height:calc(100vh - 220px)} }
+.instax[data-id]{cursor:zoom-in}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;max-width:min(90vw,420px);
   background:#2b2017;border:1px solid rgba(207,174,114,.4);color:var(--text);padding:10px 16px;border-radius:8px;font-size:16px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.6)}
 
@@ -312,6 +335,13 @@ video.moving{animation:breathe 6s ease-in-out infinite}
       <button class="btn solid" type="submit" id="keyGo">Entrar</button>
     </div>
   </form>
+</div>
+<div class="lightbox" id="lb" hidden role="dialog" aria-modal="true" aria-label="Foto ampliada">
+  <button class="lb-btn lb-close" id="lbClose" type="button" aria-label="Cerrar">×</button>
+  <button class="lb-btn nav lb-prev" id="lbPrev" type="button" aria-label="Foto anterior">‹</button>
+  <figure class="lb-card" id="lbCard"></figure>
+  <button class="lb-btn nav lb-next" id="lbNext" type="button" aria-label="Foto siguiente">›</button>
+  <div class="lb-count" id="lbCount"></div>
 </div>
 <div class="toast" id="toast" hidden></div>
 
@@ -643,6 +673,8 @@ book.addEventListener('click',e=>{
     return;
   }
   if(e.target.closest('.confirm')) return;
+  const fig=e.target.closest('.instax[data-id]');
+  if(fig && S.photos && S.photos.some(p=>p.id===fig.dataset.id)){ openLB(fig.dataset.id); return; }
   if(S.cur===0){ go(1); return; }
   const r=book.getBoundingClientRect();
   go((e.clientX-r.left)/r.width < .35 ? -1 : 1);
@@ -650,11 +682,56 @@ book.addEventListener('click',e=>{
 $('#prev').onclick=()=>go(-1);
 $('#next').onclick=()=>go(1);
 document.addEventListener('keydown',e=>{
+  if(!$('#lb').hidden){ if(e.key==='Escape') closeLB(); if(e.key==='ArrowRight') stepLB(1); if(e.key==='ArrowLeft') stepLB(-1); return; }
   if(!$('#sheet').hidden || /INPUT|TEXTAREA/.test(document.activeElement?.tagName)) return;
   if(e.key==='ArrowRight') go(1);
   if(e.key==='ArrowLeft') go(-1);
 });
 $('#editBtn').onclick=()=>{ S.edit=!S.edit; book.classList.toggle('editing',S.edit); controls(); };
+
+/* ---------- lightbox ---------- */
+let lbIdx=-1, lbFrom=null;
+function lbSrc(ph){ return GHM.blobs[ph.id] || ph.url || ('/_blob/'+ph.asset); }
+function showLB(){
+  const ph=S.photos[lbIdx]; if(!ph) return closeLB();
+  const src=esc(lbSrc(ph));
+  $('#lbCard').innerHTML = (ph.kind==='video'
+      ? `<video src="${src}" autoplay loop playsinline controls></video>`
+      : `<img src="${src}" alt="${esc(ph.caption||'Foto de A & J')}">`)
+    + `<figcaption>${esc(ph.caption||'')}</figcaption>${ph.date?`<span class="when">${esc(ph.date)}</span>`:''}`;
+  const c=$('#lbCard'); c.style.animation='none'; void c.offsetWidth; c.style.animation='';
+  const m=c.querySelector('img,video'); m.addEventListener(ph.kind==='video'?'loadedmetadata':'load', fitLB); if(m.complete) fitLB();
+  $('#lbPrev').disabled = lbIdx<=0; $('#lbNext').disabled = lbIdx>=S.photos.length-1;
+  $('#lbCount').textContent = `${lbIdx+1} de ${S.photos.length}`;
+}
+function fitLB(){
+  const m=$('#lbCard').querySelector('img,video'); if(!m) return;
+  const nw=m.naturalWidth||m.videoWidth, nh=m.naturalHeight||m.videoHeight; if(!nw||!nh) return;
+  const W=innerWidth, H=innerHeight, phone=W<=600;
+  const bw=Math.min(1100, W - 32 - 24 - (phone?0:2*54)), bh=H - (phone?250:200);
+  const k=Math.min(bw/nw, bh/nh);
+  m.style.width=Math.round(nw*k)+'px'; m.style.height=Math.round(nh*k)+'px'; m.style.maxWidth='none'; m.style.maxHeight='none';
+  const cap=$('#lbCard figcaption'); if(cap) cap.style.maxWidth=Math.round(nw*k)+'px';
+}
+addEventListener('resize',()=>{ if(!$('#lb').hidden) fitLB(); });
+function openLB(id){
+  lbIdx=S.photos.findIndex(p=>p.id===id); if(lbIdx<0) return;
+  lbFrom=document.activeElement;
+  leaves.forEach(l=>l.querySelectorAll('video').forEach(v=>v.pause()));
+  $('#lb').hidden=false; showLB(); $('#lbClose').focus();
+}
+function closeLB(){
+  $('#lb').hidden=true; $('#lbCard').innerHTML=''; syncMedia();
+  if(lbFrom && lbFrom.focus) lbFrom.focus();
+}
+function stepLB(d){ const j=lbIdx+d; if(j<0||j>=S.photos.length) return; lbIdx=j; showLB(); }
+$('#lbClose').onclick=closeLB;
+$('#lbPrev').onclick=()=>stepLB(-1);
+$('#lbNext').onclick=()=>stepLB(1);
+$('#lb').addEventListener('click',e=>{ if(e.target.id==='lb') closeLB(); });
+let lbX=null;
+$('#lb').addEventListener('pointerdown',e=>{ lbX=e.clientX; });
+$('#lb').addEventListener('pointerup',e=>{ if(lbX===null) return; const dx=e.clientX-lbX; lbX=null; if(Math.abs(dx)>50) stepLB(dx<0?1:-1); });
 
 /* ---------- delete ---------- */
 function askDelete(fig){
