@@ -64,19 +64,19 @@
   "date": ""
  },
  {
-  "id": "atardecer-manos",
-  "url": "fotos/atardecer-manos.jpg",
-  "kind": "image",
-  "shape": "wide",
-  "caption": "",
-  "date": ""
- },
- {
   "id": "mvsyw0s7456y",
   "url": "fotos/mvsyw0s7456y.jpg",
   "kind": "image",
   "shape": "tall",
   "caption": "Mine.",
   "date": "💛"
+ },
+ {
+  "id": "atardecer-manos",
+  "url": "fotos/atardecer-manos.jpg",
+  "kind": "image",
+  "shape": "wide",
+  "caption": "",
+  "date": ""
  }
 ]
