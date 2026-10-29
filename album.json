@@ -24,20 +24,20 @@
   "date": "????"
  },
  {
-  "id": "m22c9bc5b",
-  "url": "fotos/m22c9bc5b.jpg",
-  "kind": "image",
-  "shape": "tall",
-  "caption": "Azul",
-  "date": "———"
- },
- {
   "id": "halloween-ella",
   "url": "fotos/halloween-ella.jpg",
   "kind": "image",
   "shape": "wide",
   "caption": "",
   "date": ""
+ },
+ {
+  "id": "m22c9bc5b",
+  "url": "fotos/m22c9bc5b.jpg",
+  "kind": "image",
+  "shape": "tall",
+  "caption": "Azul",
+  "date": "———"
  },
  {
   "id": "halloween-el",
