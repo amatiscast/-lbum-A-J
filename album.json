@@ -1,0 +1,90 @@
+[
+ {
+  "id": "primera",
+  "url": "fotos/primera.jpg",
+  "kind": "image",
+  "shape": "tall",
+  "caption": "Amatis & Joshua",
+  "date": ""
+ },
+ {
+  "id": "m24a8658a",
+  "url": "fotos/m24a8658a.jpg",
+  "kind": "image",
+  "shape": "tall",
+  "caption": "Primer contacto",
+  "date": "28 de septiembre"
+ },
+ {
+  "id": "mcd8b4939",
+  "url": "fotos/mcd8b4939.jpg",
+  "kind": "image",
+  "shape": "tall",
+  "caption": "Un placer conocerte",
+  "date": "- - -"
+ },
+ {
+  "id": "m56029797",
+  "url": "fotos/m56029797.jpg",
+  "kind": "image",
+  "shape": "tall",
+  "caption": "First coffee…",
+  "date": "???"
+ },
+ {
+  "id": "mbd642ae2",
+  "url": "fotos/mbd642ae2.jpg",
+  "kind": "image",
+  "shape": "tall",
+  "caption": "Color favorito",
+  "date": "…"
+ },
+ {
+  "id": "m1e41d590",
+  "url": "fotos/m1e41d590.jpg",
+  "kind": "image",
+  "shape": "tall",
+  "caption": "Quién es él?…",
+  "date": "????"
+ },
+ {
+  "id": "m22c9bc5b",
+  "url": "fotos/m22c9bc5b.jpg",
+  "kind": "image",
+  "shape": "tall",
+  "caption": "Azul",
+  "date": "———"
+ },
+ {
+  "id": "halloween-ella",
+  "url": "fotos/halloween-ella.jpg",
+  "kind": "image",
+  "shape": "wide",
+  "caption": "",
+  "date": ""
+ },
+ {
+  "id": "halloween-el",
+  "url": "fotos/halloween-el.jpg",
+  "kind": "image",
+  "shape": "wide",
+  "caption": "",
+  "date": ""
+ },
+ {
+  "id": "atardecer-torres",
+  "url": "fotos/atardecer-torres.jpg",
+  "kind": "image",
+  "shape": "wide",
+  "caption": "",
+  "date": ""
+ },
+ {
+  "id": "atardecer-manos",
+  "url": "fotos/atardecer-manos.jpg",
+  "kind": "image",
+  "shape": "wide",
+  "caption": "",
+  "date": ""
+ }
+]
