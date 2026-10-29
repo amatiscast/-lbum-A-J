@@ -64,20 +64,20 @@
   "date": ""
  },
  {
-  "id": "atardecer-manos",
-  "url": "fotos/atardecer-manos.jpg",
-  "kind": "image",
-  "shape": "wide",
-  "caption": "",
-  "date": ""
- },
- {
   "id": "mvt1942ilvoa",
   "url": "fotos/mvt1942ilvoa.jpg",
   "kind": "image",
   "shape": "tall",
   "caption": "First kiss",
   "date": "28sep26?"
+ },
+ {
+  "id": "atardecer-manos",
+  "url": "fotos/atardecer-manos.jpg",
+  "kind": "image",
+  "shape": "wide",
+  "caption": "",
+  "date": ""
  },
  {
   "id": "mvt02z7v8nqb",
